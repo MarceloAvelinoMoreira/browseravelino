@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.DS_Store
+DerivedData/
+xcuserdata/
+node_modules/
+build/
+*.xcodeproj/
+*.xcworkspace/
+*.zip
+*.log
