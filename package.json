@@ -1,0 +1,14 @@
+{
+  "name": "atlas-browser",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Navegador nativo para iPad com assistente de IA lateral",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node --check server/server.mjs",
+    "test": "node --test server/bridge.test.mjs",
+    "start": "node server/server.mjs"
+  }
+}
