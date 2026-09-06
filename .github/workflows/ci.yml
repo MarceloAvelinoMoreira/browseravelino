@@ -1,0 +1,64 @@
+name: Atlas CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  javascript:
+    name: Verificar servidor e executor
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - run: npm test
+
+  ipad:
+    name: Compilar para simulador de iPad
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar XcodeGen
+        run: brew install xcodegen
+      - name: Gerar projeto Xcode
+        run: xcodegen generate --spec project.json
+      - name: Compilar sem assinatura
+        run: |
+          set -o pipefail
+          xcodebuild -project AtlasBrowser.xcodeproj \
+            -scheme AtlasBrowser \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build | tee xcodebuild.log
+      - name: Compactar app do simulador
+        run: ditto -c -k --sequesterRsrc --keepParent build/Build/Products/Debug-iphonesimulator/AtlasBrowser.app AtlasBrowser-simulator.zip
+      - name: Salvar app do simulador
+        uses: actions/upload-artifact@v4
+        with:
+          name: AtlasBrowser-simulator
+          path: AtlasBrowser-simulator.zip
+          retention-days: 7
+      - name: Salvar log de compilação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
